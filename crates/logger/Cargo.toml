@@ -1,0 +1,12 @@
+[package]
+name = "rust-telemetry"
+version = "0.1.0"
+edition = "2021"
+description = "A lightweight, ergonomic logging library for Rust"
+license = "MIT"
+repository = "https://github.com/aerrobert/rust-telemetry"
+keywords = ["logging", "telemetry", "tracing", "debug"]
+categories = ["development-tools::debugging"]
+
+[dependencies]
+
