@@ -1,100 +1,56 @@
-use rust_telemetry::{clear_output, debug, error, info, set_output, warn};
-use std::io::Write;
-use std::sync::{Arc, Mutex};
+use insta::assert_snapshot;
+use rust_telemetry::{
+    clear_output, clear_timestamp, debug, error, info, set_output, set_timestamp, warn,
+    MemoryWriter,
+};
 
-/// Thread-safe buffer for capturing log output
-struct TestBuffer(Arc<Mutex<Vec<u8>>>);
-
-impl TestBuffer {
-    fn new() -> Self {
-        Self(Arc::new(Mutex::new(Vec::new())))
-    }
-
-    fn writer(&self) -> TestWriter {
-        TestWriter(self.0.clone())
-    }
-
-    fn contents(&self) -> String {
-        let data = self.0.lock().unwrap();
-        String::from_utf8_lossy(&data).to_string()
-    }
-}
-
-struct TestWriter(Arc<Mutex<Vec<u8>>>);
-
-impl Write for TestWriter {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        self.0.lock().unwrap().extend_from_slice(buf);
-        Ok(buf.len())
-    }
-
-    fn flush(&mut self) -> std::io::Result<()> {
-        Ok(())
-    }
+/// Run a block with a memory writer and fixed timestamp, then assert snapshot
+macro_rules! capture {
+    ($($body:tt)*) => {{
+        let buffer = MemoryWriter::new();
+        set_output(buffer.writer());
+        set_timestamp("00:00:00.000");
+        $($body)*
+        assert_snapshot!(buffer.contents());
+        clear_timestamp();
+        clear_output();
+    }};
 }
 
 #[test]
 fn test_debug_output() {
-    let buffer = TestBuffer::new();
-    set_output(Box::new(buffer.writer()));
-
-    debug("hello world");
-
-    assert!(buffer.contents().contains("[DEBUG]"));
-    assert!(buffer.contents().contains("hello world"));
-    clear_output();
+    capture! {
+        debug("hello world");
+    }
 }
 
 #[test]
 fn test_info_output() {
-    let buffer = TestBuffer::new();
-    set_output(Box::new(buffer.writer()));
-
-    info("server started");
-
-    assert!(buffer.contents().contains("[INFO"));
-    assert!(buffer.contents().contains("server started"));
-    clear_output();
+    capture! {
+        info("server started");
+    }
 }
 
 #[test]
 fn test_warn_output() {
-    let buffer = TestBuffer::new();
-    set_output(Box::new(buffer.writer()));
-
-    warn("memory low");
-
-    assert!(buffer.contents().contains("[WARN"));
-    assert!(buffer.contents().contains("memory low"));
-    clear_output();
+    capture! {
+        warn("memory low");
+    }
 }
 
 #[test]
 fn test_error_output() {
-    let buffer = TestBuffer::new();
-    set_output(Box::new(buffer.writer()));
-
-    error("connection failed");
-
-    assert!(buffer.contents().contains("[ERROR]"));
-    assert!(buffer.contents().contains("connection failed"));
-    clear_output();
+    capture! {
+        error("connection failed");
+    }
 }
 
 #[test]
 fn test_multiple_logs() {
-    let buffer = TestBuffer::new();
-    set_output(Box::new(buffer.writer()));
-
-    debug("first");
-    info("second");
-    warn("third");
-    error("fourth");
-
-    let output = buffer.contents();
-    assert!(output.contains("first"));
-    assert!(output.contains("second"));
-    assert!(output.contains("third"));
-    assert!(output.contains("fourth"));
-    clear_output();
+    capture! {
+        debug("first");
+        info("second");
+        warn("third");
+        error("fourth");
+    }
 }

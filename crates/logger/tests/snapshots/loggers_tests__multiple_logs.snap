@@ -1,0 +1,8 @@
+---
+source: crates/logger/tests/loggers_tests.rs
+expression: buffer.contents()
+---
+00:00:00.000 debg first
+00:00:00.000 info second
+00:00:00.000 warn third
+00:00:00.000 errr fourth

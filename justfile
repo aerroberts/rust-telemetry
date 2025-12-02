@@ -5,6 +5,8 @@ default:
 # Operations
 test:
     cargo test --workspace -- --test-threads=1
+test-update:
+    cargo insta accept
 lint:
     cargo clippy --workspace --all-targets
 fmt:
@@ -19,3 +21,5 @@ release:
 # Meta commands
 ci: lint fmt build test
 
+example:
+    cargo run -p example
