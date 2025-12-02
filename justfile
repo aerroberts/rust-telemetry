@@ -2,42 +2,20 @@
 default:
     @just --list
 
-# Run all tests
+# Operations
 test:
-    cargo test -- --test-threads=1
-
-# Run tests for logger only
-test-logger:
-    cargo test -p rust-telemetry -- --test-threads=1
-
-# Lint with clippy
+    cargo test --workspace -- --test-threads=1
 lint:
-    cargo clippy --all-targets
-
-# Format code
+    cargo clippy --workspace --all-targets
 fmt:
-    cargo fmt
-
-# Check formatting without changing
-fmt-check:
-    cargo fmt --check
-
-# Lint and format
-check: fmt lint
-
-# Build debug
+    cargo fmt --all
 build:
-    cargo build
-
-# Build release
-build-release:
+    cargo build --workspace
+fix:
+    cargo fix --workspace --all-targets --allow-dirty
+release:
     cargo build --release
 
-# Run the example
-run:
-    cargo run -p example
-
-# Clean build artifacts
-clean:
-    cargo clean
+# Meta commands
+ci: lint fmt build test
 
